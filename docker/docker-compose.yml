@@ -1,0 +1,23 @@
+version: '3.8'
+
+services: 
+    dta:
+        container_name: dta
+        build:
+            context: ../
+            args: 
+                - DOCKER_NETRC
+            dockerfile: docker/Dockerfile
+        environment: 
+            BASE_PATH: "/opt/data"
+            RM_HOST: "rm:8005"
+            BTD_HOST: "btd:8004"
+        volumes:
+            - ../repos:/opt/data
+        ports: 
+            - 8006:8006
+
+networks:
+    default:
+        external:
+            name: proxynet

@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option go_package = "./dta;dta";
+
+service CommitExplorer {
+    rpc ExploreCommit(ExploreCommitRequest) returns (ExploreCommitResponse);
+}
+
+message ExploreCommitRequest {
+    string projectID = 1;
+    string commitHash = 2;
+}
+
+message ExploreCommitResponse {
+}
