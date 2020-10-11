@@ -18,6 +18,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	gpprotos "github.com/iantal/dta/protos/gradle-parser"
+
 )
 
 func main() {
@@ -30,6 +32,7 @@ func main() {
 	bp := fmt.Sprintf("%v", viper.Get("BASE_PATH"))
 	rmHost := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	btdHost := fmt.Sprintf("%v", viper.Get("BTD_HOST"))
+	gradleParserHost := fmt.Sprintf("%v", viper.Get("GP_HOST"))
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
@@ -51,6 +54,19 @@ func main() {
 
 	cc := btdprotos.NewUsedBuildToolsClient(conn)
 
+	connGradle, err := grpc.Dial(
+		gradleParserHost,
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithTimeout(60*time.Second),
+	)
+	if err != nil {
+		panic(err)
+	}
+	defer conn.Close()
+	gpc := gpprotos.NewGradleParseServiceClient(connGradle)
+
 	user := viper.Get("POSTGRES_USER")
 	password := viper.Get("POSTGRES_PASSWORD")
 	database := viper.Get("POSTGRES_DB")
@@ -71,7 +87,7 @@ func main() {
 
 	projectDB := repository.NewProjectDB(log, db)
 
-	c := server.NewCommitExplorer(log, bp, cc, rmHost, stor)
+	c := server.NewCommitExplorer(log, projectDB, bp, cc, gpc, rmHost, stor)
 
 	// register the currency server
 	protos.RegisterCommitExplorerServer(gs, c)

@@ -78,35 +78,28 @@ func extractProject(line string) string {
 	return result["project"]
 }
 
-// Dependencies parses the output of `gradlew dependencies`
-func (g *Gradlew) Dependencies(projects []string) (string, []string) {
-	if !g.hasGradlew() {
-		return "", []string{}
-	}
-	g.log.Info("Started parsing dependencies")
 
-	// root only project without subprojects
-	if len(projects) == 0 {
-		g.log.Info("Only root project")
-		err, stdout, _ := utils.CMD("/bin/sh", "gradlew", "dependencies")
+func (g *Gradlew) Dependencies(project string, isSubproject bool) string {
+	if isSubproject {
+		err, stdout, serr := utils.CMD("/bin/sh", "gradlew", "dependencies")
 		if err != nil {
-			g.log.Error("Error executing [gradlew dependencies]")
+			g.log.Info("Root dep error " + strings.Join(serr, "\n"))
+
+			g.log.Error("Error executing [gradlew dependencies] for " + project)
+			return ""
 		}
-		return "root", stdout
+		return strings.Join(stdout, "\n")
 	}
 
-	// result := map(string)[]string
-	for _, p := range projects {
-		g.log.Info("Started parsing dependencies", "project", p)
-		c := p + ":dependencies"
-		err, stdout, _ := utils.CMD("/bin/sh", "gradlew", c)
-		if err != nil {
-			g.log.Error("Error executing [gradlew dependencies]", "cmd", c)
-		}
-		fmt.Println(stdout)
-	}
+	c := project + ":dependencies"
+	err, stdout, serr := utils.CMD("/bin/sh", "gradlew", c)
+	if err != nil {
+		g.log.Info("subproject dep error " + strings.Join(serr, "\n"))
 
-	return "", []string{}
+		g.log.Error("Error executing [gradlew dependencies]", "cmd", c)
+		return ""
+	}
+	return strings.Join(stdout, "\n")
 }
 
 func (g *Gradlew) hasGradlew() bool {

@@ -9,20 +9,20 @@ import (
 	"github.com/iantal/dta/internal/repository"
 	"github.com/iantal/dta/internal/service"
 	protos "github.com/iantal/dta/protos/dta"
+	gpprotos "github.com/iantal/dta/protos/gradle-parser"
 )
 
 type CommitExplorer struct {
-	log       hclog.Logger
+	log      hclog.Logger
 	explorer *service.Explorer
-	
 }
 
 // NewCommitExplorer creates a new Analyzer
-func NewCommitExplorer(l hclog.Logger, db *repository.ProjectDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, rmHost string, store files.Storage) *CommitExplorer {
-	return &CommitExplorer{l, service.NewExplorer(l, db, basePath, btdClient, rmHost, store)}
+func NewCommitExplorer(l hclog.Logger, db *repository.ProjectDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *CommitExplorer {
+	return &CommitExplorer{l, service.NewExplorer(l, db, basePath, btdClient, gradleClient, rmHost, store)}
 }
 
-// ExploreCommit performs the analysis for a specific commitId and projectId 
+// ExploreCommit performs the analysis for a specific commitId and projectId
 func (c *CommitExplorer) ExploreCommit(ctx context.Context, rr *protos.ExploreCommitRequest) (*protos.ExploreCommitResponse, error) {
 	c.log.Info("Handle request for EcploreCommit", "projectID", rr.GetProjectID(), "commit", rr.GetCommitHash())
 

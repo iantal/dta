@@ -6,6 +6,7 @@ type Status string
 const (
 	DownloadSuccess       Status = "DOWNLOAD_SUCCESS"
 	DownloadFailure       Status = "DOWNLOAD_FAILURE"
+	UnbundleSuccess       Status = "UNBUNDLE_SUCCESS"
 	UnbundleFailure       Status = "UNBUNDLE_FAILURE"
 	BuildToolSuccess      Status = "BUILD_TOOL_SUCCESS"
 	BuildToolFailure      Status = "BUILD_TOOL_FAILURE"

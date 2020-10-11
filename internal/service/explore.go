@@ -11,25 +11,34 @@ import (
 	"github.com/iantal/dta/internal/domain"
 	"github.com/iantal/dta/internal/files"
 	"github.com/iantal/dta/internal/repository"
+	gpprotos "github.com/iantal/dta/protos/gradle-parser"
 )
 
 type Explorer struct {
-	log       hclog.Logger
-	db        *repository.ProjectDB
-	basePath  string
-	btdClient btdprotos.UsedBuildToolsClient
-	rmHost    string
-	store     files.Storage
+	log          hclog.Logger
+	db           *repository.ProjectDB
+	basePath     string
+	btdClient    btdprotos.UsedBuildToolsClient
+	gradleClient gpprotos.GradleParseServiceClient
+	rmHost       string
+	store        files.Storage
 }
 
-func NewExplorer(l hclog.Logger, db *repository.ProjectDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, rmHost string, store files.Storage) *Explorer {
-	return &Explorer{l, db, basePath, btdClient, rmHost, store}
+func NewExplorer(l hclog.Logger, db *repository.ProjectDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *Explorer {
+	return &Explorer{l, db, basePath, btdClient, gradleClient, rmHost, store}
 }
 
 func (e *Explorer) Explore(projectID, commit string) error {
 	projectPath := filepath.Join(e.store.FullPath(projectID), "bundle")
 
-	project := domain.NewProject(uuid.MustParse(projectID), commit, "root", domain.DownloadSuccess.String(), "", "")
+	var project *domain.Project
+	project = e.db.GetProjectByIDAndCommit(projectID, commit)
+	if project != nil && project.Status == domain.DependencyTreeSuccess.String() {
+		// send request to gradle parser
+		return nil
+	}
+
+	project = domain.NewProject(uuid.MustParse(projectID), commit, "root", domain.DownloadSuccess.String(), "", "")
 
 	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
 		err := e.downloadRepository(projectID, commit)
@@ -39,9 +48,9 @@ func (e *Explorer) Explore(projectID, commit string) error {
 			e.db.AddProject(project)
 			return fmt.Errorf("Could not download bundled repository for %s", projectID)
 		}
-		e.db.AddProject(project)
-	}
 
+	}
+	e.db.AddProject(project)
 	bp := commit + ".bundle"
 	srcPath := e.store.FullPath(filepath.Join(projectID, "bundle", bp))
 	destPath := e.store.FullPath(filepath.Join(projectID, "unbundle"))
@@ -54,6 +63,7 @@ func (e *Explorer) Explore(projectID, commit string) error {
 			return fmt.Errorf("Could not unbundle repository for %s", projectID)
 		}
 	}
+	e.db.UpdateProject(project, domain.UnbundleSuccess)
 
 	go e.detectBuildTools(destPath, project)
 

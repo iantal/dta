@@ -38,6 +38,11 @@ func (p *ProjectDB) UpdateProjectBuildToolAndStatus(project *domain.Project, sta
 	p.db.Model(&project).Updates(domain.Project{Status: status.String(), BuildTool: buildTool})
 }
 
+// UpdateProjectName updates the name of a project
+func (p *ProjectDB) UpdateProjectName(project *domain.Project, name string) {
+	p.db.Model(&project).Update("name", name)
+}
+
 // GetProjects returns all existing projects in the db
 func (p *ProjectDB) GetProjects() ([]*domain.Project, error) {
 	var projects []*domain.Project

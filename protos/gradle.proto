@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+option go_package = "./gradle-parser;gradle-parser";
+package io.gradleparser.gradleparser;
+
+service GradleParseService {
+    rpc Parse (ParseRequest) returns (ParseResponse) {}
+  }
+  
+  message ParseRequest {
+    string data = 1;
+  }
+  
+  message ParseResponse {
+    repeated Project projects = 2;
+  }
+  
+  message Project {
+    string name = 1;
+    repeated Library libraries = 2;
+  }
+  
+  message Library {
+    string name = 1;
+    string type = 2;
+    string scope = 3;
+  }

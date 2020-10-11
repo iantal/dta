@@ -26,20 +26,44 @@ func (e *Explorer) detectBuildTools(destPath string, project *domain.Project) {
 		return
 	}
 
-	
-
 	for _, bt := range resp.BuildTools {
 		if bt == "gradle" {
 			e.db.UpdateProjectBuildToolAndStatus(project, domain.BuildToolSuccess, "gradle")
-			
+
 			gw := NewGradlew(e.log, filepath.Join(destPath, commit))
+
 			projects, err := gw.Projects()
-			if err != nil {		
-				e.db.UpdateProject(project, domain.DependencyTreeFailure)		
+			if err != nil {
+				e.db.UpdateProject(project, domain.DependencyTreeFailure)
 				e.log.Error("Error generating gradle dependency tree")
 			}
-			e.db.UpdateProject(project, domain.DependencyTreeSuccess)		
-			fmt.Println(projects)
+
+			if len(projects) == 1 {
+				e.db.UpdateProjectName(project, projects[0])
+				tree := gw.Dependencies(projects[0], false)
+				results, err := e.parseGradle(tree)
+				if err != nil {
+					e.db.UpdateProject(project, domain.DependencyTreeFailure)
+					e.log.Error("Could not generate dependency tree for " + projects[0])
+					return
+				}
+				fmt.Println(results)
+			}
+
+			for _, p := range projects {
+				e.db.UpdateProjectName(project, p)
+				tree := gw.Dependencies(projects[0], true)
+				results, err := e.parseGradle(tree)
+				if err != nil {
+					e.db.UpdateProject(project, domain.DependencyTreeFailure)
+					e.log.Error("Could not generate dependency tree for " + projects[0])
+					return
+				}
+				fmt.Println(results)
+			}
+
+
+			e.db.UpdateProject(project, domain.DependencyTreeSuccess)
 		} else if bt == "maven" {
 			e.db.UpdateProjectBuildToolAndStatus(project, domain.BuildToolSuccess, "maven")
 		} else {
