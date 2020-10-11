@@ -19,16 +19,16 @@ func (e *Explorer) downloadRepository(projectID, commit string) error {
 
 	e.log.Info("Content-Dispozition", "file", resp.Header.Get("Content-Disposition"))
 
-	e.save(projectID, resp.Body)
+	e.save(projectID, commit, resp.Body)
 	resp.Body.Close()
 
 	return nil
 }
 
-func (a *Explorer) save(projectID string, r io.ReadCloser) error {
+func (a *Explorer) save(projectID, commit string, r io.ReadCloser) error {
 	a.log.Info("Save project - storage", "projectID", projectID)
 
-	bp := projectID + ".bundle"
+	bp := commit + ".bundle"
 	fp := filepath.Join(projectID, "bundle", bp)
 	err := a.store.Save(fp, r)
 

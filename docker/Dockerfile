@@ -16,13 +16,17 @@ RUN go mod download
 
 COPY . .
 RUN go build -o main .
-
 WORKDIR /dist
 RUN cp /build/main .
 
+
 FROM golang:alpine as deploy
 COPY --from=builder /dist .
-RUN apk update && apk add unzip && apk add bash && apk add git
+
+RUN apk update && apk add wget && apk add bash && apk add zip && apk add git && apk add openjdk11
+RUN wget https://raw.githubusercontent.com/vishnubob/wait-for-it/master/wait-for-it.sh && chmod +x wait-for-it.sh
+
+RUN git config --global user.email "test@dta.com" && git config --global user.name "testdta"
 
 ENV BASE_PATH="/opt/data"
 VOLUME [ "/opt/data" ]

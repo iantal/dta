@@ -7,11 +7,13 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-hclog"
+	btdprotos "github.com/iantal/btd/protos/btd"
 	"github.com/iantal/dta/internal/files"
+	"github.com/iantal/dta/internal/repository"
 	"github.com/iantal/dta/internal/server"
 	protos "github.com/iantal/dta/protos/dta"
-	btdprotos "github.com/iantal/btd/protos/btd"
-
+	"github.com/jinzhu/gorm"
+	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
 	"github.com/spf13/viper"
 
 	"google.golang.org/grpc"
@@ -48,6 +50,26 @@ func main() {
 	defer conn.Close()
 
 	cc := btdprotos.NewUsedBuildToolsClient(conn)
+
+	user := viper.Get("POSTGRES_USER")
+	password := viper.Get("POSTGRES_PASSWORD")
+	database := viper.Get("POSTGRES_DB")
+	host := viper.Get("POSTGRES_HOST")
+	port := viper.Get("POSTGRES_PORT")
+	connection := fmt.Sprintf("host=%v port=%v user=%v dbname=%v password=%v sslmode=disable", host, port, user, database, password)
+
+	db, err := gorm.Open("postgres", connection)
+	defer db.Close()
+	if err != nil {
+		panic("Failed to connect to database!")
+	}
+
+	err = db.DB().Ping()
+	if err != nil {
+		panic("Ping failed!")
+	}
+
+	projectDB := repository.NewProjectDB(log, db)
 
 	c := server.NewCommitExplorer(log, bp, cc, rmHost, stor)
 

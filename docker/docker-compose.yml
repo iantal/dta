@@ -5,10 +5,12 @@ services:
         container_name: dta
         build:
             context: ../
-            args: 
-                - DOCKER_NETRC
             dockerfile: docker/Dockerfile
+        env_file: 
+            - database.env
         environment: 
+            POSTGRES_HOST: pgdb
+            POSTGRES_PORT: 5432
             BASE_PATH: "/opt/data"
             RM_HOST: "rm:8005"
             BTD_HOST: "btd:8004"
@@ -16,6 +18,7 @@ services:
             - ../repos:/opt/data
         ports: 
             - 8006:8006
+        command: ["./wait-for-it.sh", "pgdb:5432", "--", "./main"]
 
 networks:
     default:
