@@ -13,14 +13,14 @@ The response from the parse services is then forwarded to the `collector` servic
 
 ### `Columns`
 
-| `Name`       | `Type`      | `Nullable` | `Default` | `Comment` |
-| ------------ | ----------- | ---------- | --------- | --------- |
-| ProjectID    | varchar(50) | `false`    |           |           |
-| Commit       | varchar(50) | `false`    |           |           |
-| Name         | varchar(50) | `false`    |           |           |
-| Status       | varchar(50) | `false`    |           |           |
-| BuildType       | varchar(50) | `false`    |           |           |
-| Data       | varchar(50) | `false`    |           |           |
+| `Name`    | `Type`      | `Nullable` | `Default` | `Comment` |
+| --------- | ----------- | ---------- | --------- | --------- |
+| ProjectID | varchar(50) | `false`    |           |           |
+| Commit    | varchar(50) | `false`    |           |           |
+| Name      | varchar(50) | `false`    |           |           |
+| Status    | varchar(50) | `false`    |           |           |
+| BuildType | varchar(50) | `false`    |           |           |
+| Data      | varchar(50) | `false`    |           |           |
 ---
 
 Status:
@@ -40,3 +40,20 @@ Status:
 Name:
 ---
 `If` multi-project build `=>` subproject name `else` `=>` "root"
+
+---
+### `Table: Libraries`
+### `Primary Key`
+
+- `Columns`: ProjectID, Commit
+
+### `Columns`
+
+| `Name`    | `Type`      | `Nullable` | `Default` | `Comment` |
+| --------- | ----------- | ---------- | --------- | --------- |
+| ProjectID | varchar(50) | `false`    |           |           |
+| Commit    | varchar(50) | `false`    |           |           |
+| Name      | varchar(50) | `false`    |           |           |
+| Type      | varchar(50) | `false`    |           |           |
+| Scope     | varchar(50) | `false`    |           |           |
+---
