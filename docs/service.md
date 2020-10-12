@@ -6,7 +6,7 @@ The response from the parse services is then forwarded to the `collector` servic
 
 ## Database
 ---
-### `Table: Statuses`
+### `Table: Projects`
 ### `Primary Key`
 
 - `Columns`: ProjectID, Commit
@@ -19,6 +19,8 @@ The response from the parse services is then forwarded to the `collector` servic
 | Commit       | varchar(50) | `false`    |           |           |
 | Name         | varchar(50) | `false`    |           |           |
 | Status       | varchar(50) | `false`    |           |           |
+| BuildType       | varchar(50) | `false`    |           |           |
+| Data       | varchar(50) | `false`    |           |           |
 ---
 
 Status:

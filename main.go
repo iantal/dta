@@ -9,17 +9,15 @@ import (
 	"github.com/hashicorp/go-hclog"
 	btdprotos "github.com/iantal/btd/protos/btd"
 	"github.com/iantal/dta/internal/files"
-	"github.com/iantal/dta/internal/repository"
 	"github.com/iantal/dta/internal/server"
 	protos "github.com/iantal/dta/protos/dta"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
 	"github.com/spf13/viper"
 
+	gpprotos "github.com/iantal/dta/protos/gradle-parser"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
-	gpprotos "github.com/iantal/dta/protos/gradle-parser"
-
 )
 
 func main() {
@@ -85,9 +83,7 @@ func main() {
 		panic("Ping failed!")
 	}
 
-	projectDB := repository.NewProjectDB(log, db)
-
-	c := server.NewCommitExplorer(log, projectDB, bp, cc, gpc, rmHost, stor)
+	c := server.NewCommitExplorer(log, db, bp, cc, gpc, rmHost, stor)
 
 	// register the currency server
 	protos.RegisterCommitExplorerServer(gs, c)

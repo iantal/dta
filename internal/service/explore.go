@@ -14,9 +14,11 @@ import (
 	gpprotos "github.com/iantal/dta/protos/gradle-parser"
 )
 
+// Explorer is a service that handles the analysis flows
 type Explorer struct {
 	log          hclog.Logger
 	db           *repository.ProjectDB
+	libraryDB    *repository.LibraryDB
 	basePath     string
 	btdClient    btdprotos.UsedBuildToolsClient
 	gradleClient gpprotos.GradleParseServiceClient
@@ -24,10 +26,12 @@ type Explorer struct {
 	store        files.Storage
 }
 
-func NewExplorer(l hclog.Logger, db *repository.ProjectDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *Explorer {
-	return &Explorer{l, db, basePath, btdClient, gradleClient, rmHost, store}
+// NewExplorer creates an Explorer
+func NewExplorer(l hclog.Logger, db *repository.ProjectDB, ldb *repository.LibraryDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *Explorer {
+	return &Explorer{l, db, ldb, basePath, btdClient, gradleClient, rmHost, store}
 }
 
+// Explore performs the analysis steps for a given commit of a project
 func (e *Explorer) Explore(projectID, commit string) error {
 	projectPath := filepath.Join(e.store.FullPath(projectID), "bundle")
 
@@ -48,8 +52,8 @@ func (e *Explorer) Explore(projectID, commit string) error {
 			e.db.AddProject(project)
 			return fmt.Errorf("Could not download bundled repository for %s", projectID)
 		}
-
 	}
+
 	e.db.AddProject(project)
 	bp := commit + ".bundle"
 	srcPath := e.store.FullPath(filepath.Join(projectID, "bundle", bp))

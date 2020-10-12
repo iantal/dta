@@ -25,15 +25,15 @@ func (e *Explorer) downloadRepository(projectID, commit string) error {
 	return nil
 }
 
-func (a *Explorer) save(projectID, commit string, r io.ReadCloser) error {
-	a.log.Info("Save project - storage", "projectID", projectID)
+func (e *Explorer) save(projectID, commit string, r io.ReadCloser) error {
+	e.log.Info("Save project - storage", "projectID", projectID)
 
 	bp := commit + ".bundle"
 	fp := filepath.Join(projectID, "bundle", bp)
-	err := a.store.Save(fp, r)
+	err := e.store.Save(fp, r)
 
 	if err != nil {
-		a.log.Error("Unable to save file", "error", err)
+		e.log.Error("Unable to save file", "error", err)
 		return fmt.Errorf("Unable to save file %s", err)
 	}
 
