@@ -31,6 +31,7 @@ func (e *Explorer) detectBuildTools(destPath string, project *domain.Project) {
 			e.db.UpdateProjectBuildToolAndStatus(project, domain.BuildToolSuccess, "gradle")
 			e.handleGradle(destPath, commit, project)
 			e.db.UpdateProject(project, domain.DependencyTreeSuccess)
+			e.sendMCDRequest(project)
 		} else if bt == "maven" {
 			e.db.UpdateProjectBuildToolAndStatus(project, domain.BuildToolSuccess, "maven")
 		} else {
@@ -49,7 +50,7 @@ func (e *Explorer) handleGradle(destPath, commit string, project *domain.Project
 		return
 	}
 
-	
+	fmt.Println(projects)
 
 	if len(projects) == 1 {
 		e.db.UpdateProjectName(project, projects[0])
@@ -62,22 +63,23 @@ func (e *Explorer) handleGradle(destPath, commit string, project *domain.Project
 		}
 		for _, proj := range results {
 			for _, library := range proj.Libraries {
-				e.libraryDB.AddLibrary(domain.NewLibrary(project.ProjectID, commit, library.Name, library.Type, library.Scope))
+				e.libraryDB.AddLibrary(domain.NewLibrary(project.ProjectID, commit, library.Name, library.Type, library.Scope, "JAR"))
 			}
 		}
 	} else {
 		for _, p := range projects {
-			e.db.UpdateProjectName(project, p)
+			subproject := domain.NewProject(project.ProjectID, project.CommitHash, p, project.Status, project.BuildTool, project.Data)
+			e.db.AddProject(subproject)
 			tree := gw.Dependencies(p, true)
 			results, err := e.parseGradle(tree)
 			if err != nil {
-				e.db.UpdateProject(project, domain.DependencyTreeFailure)
+				e.db.UpdateProject(subproject, domain.DependencyTreeFailure)
 				e.log.Error("Could not generate dependency tree for " + p)
 				return
 			}
 			for _, proj := range results {
 				for _, library := range proj.Libraries {
-					e.libraryDB.AddLibrary(domain.NewLibrary(project.ProjectID, commit, library.Name, library.Type, library.Scope))
+					e.libraryDB.AddLibrary(domain.NewLibrary(project.ProjectID, commit, library.Name, library.Type, library.Scope, "JAR"))
 				}
 			}
 		}

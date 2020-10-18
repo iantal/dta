@@ -14,6 +14,8 @@ const (
 	DependencyTreeFailure Status = "DEPENDENCY_TREE_FAILURE"
 	ParseSuccess          Status = "PARSE_SUCCESS"
 	ParseFailure          Status = "PARSE_FAILURE"
+	McdSuccess            Status = "MCD_SUCCESS"
+	McdFailure            Status = "MCD_FAILURE"
 )
 
 func (s Status) String() string {

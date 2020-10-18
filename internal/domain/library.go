@@ -13,15 +13,17 @@ type Library struct {
 	Name       string    `json:"name,omitempty"`
 	Type       string    `json:"type,omitempty"`
 	Scope      string    `json:"scope,omitempty"`
+	Packaging  string    `json:"packaging,omitempty"`
 }
 
 // NewLibrary creates a Library
-func NewLibrary(projectID uuid.UUID, commitHash, name, libraryType, scope string) *Library {
+func NewLibrary(projectID uuid.UUID, commitHash, name, libraryType, scope, packaging string) *Library {
 	return &Library{
-		ProjectID: projectID,
+		ProjectID:  projectID,
 		CommitHash: commitHash,
-		Name: name,
-		Type: libraryType,
-		Scope: scope,
+		Name:       name,
+		Type:       libraryType,
+		Scope:      scope,
+		Packaging: packaging,
 	}
 }

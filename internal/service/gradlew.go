@@ -43,7 +43,6 @@ func (g *Gradlew) Projects() ([]string, error) {
 
 func isFailedCommand(stdout []string) bool {
 	for _, line := range stdout {
-		fmt.Println(line)
 		if strings.Contains(line, "BUILD SUCCESSFUL") {
 			return false
 		}
@@ -78,9 +77,10 @@ func extractProject(line string) string {
 	return result["project"]
 }
 
-
+// Dependencies parses the output of `gradlew [proj]:dependencies`
 func (g *Gradlew) Dependencies(project string, isSubproject bool) string {
-	if isSubproject {
+	g.log.Info("Generating dependency tree", "project", project)
+	if !isSubproject {
 		err, stdout, serr := utils.CMD("/bin/sh", "gradlew", "dependencies")
 		if err != nil {
 			g.log.Info("Root dep error " + strings.Join(serr, "\n"))

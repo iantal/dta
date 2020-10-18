@@ -6,7 +6,7 @@ services:
         build:
             context: ../
             args: 
-                - DOCKER_NETRC
+                - GITHUB_TOKEN
             dockerfile: docker/Dockerfile
         env_file: 
             - database.env
@@ -17,6 +17,7 @@ services:
             RM_HOST: "rm:8005"
             BTD_HOST: "btd:8004"
             GP_HOST: "gradle-parser:4001"
+            MCD_HOST: "mcd:8007"
         volumes:
             - ../repos:/opt/data
         ports: 

@@ -16,9 +16,24 @@ import (
 	"github.com/spf13/viper"
 
 	gpprotos "github.com/iantal/dta/protos/gradle-parser"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 )
+
+func gRPCConnection(host string) *grpc.ClientConn {
+	conn, err := grpc.Dial(
+		host,
+		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
+		grpc.WithInsecure(),
+		grpc.WithBlock(),
+		grpc.WithTimeout(60*time.Second),
+	)
+	if err != nil {
+		panic(err)
+	}
+	return conn
+}
 
 func main() {
 	viper.AutomaticEnv()
@@ -31,6 +46,7 @@ func main() {
 	rmHost := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	btdHost := fmt.Sprintf("%v", viper.Get("BTD_HOST"))
 	gradleParserHost := fmt.Sprintf("%v", viper.Get("GP_HOST"))
+	mcdHost := fmt.Sprintf("%v", viper.Get("MCD_HOST"))
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
@@ -38,32 +54,20 @@ func main() {
 		os.Exit(1)
 	}
 
-	conn, err := grpc.Dial(
-		btdHost,
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
-		grpc.WithInsecure(),
-		grpc.WithBlock(),
-		grpc.WithTimeout(60*time.Second),
-	)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
+	// setup GRPC for BTD
+	connBTD := gRPCConnection(btdHost)
+	defer connBTD.Close()
+	cc := btdprotos.NewUsedBuildToolsClient(connBTD)
 
-	cc := btdprotos.NewUsedBuildToolsClient(conn)
+	// setup GRPC for GRADLE-PARSER
+	connGP := gRPCConnection(gradleParserHost)
+	defer connGP.Close()
+	gpc := gpprotos.NewGradleParseServiceClient(connGP)
 
-	connGradle, err := grpc.Dial(
-		gradleParserHost,
-		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
-		grpc.WithInsecure(),
-		grpc.WithBlock(),
-		grpc.WithTimeout(60*time.Second),
-	)
-	if err != nil {
-		panic(err)
-	}
-	defer conn.Close()
-	gpc := gpprotos.NewGradleParseServiceClient(connGradle)
+	// setup GRPC for MCD
+	connMCD := gRPCConnection(mcdHost)
+	defer connMCD.Close()
+	mcd := mcdprotos.NewDownloaderClient(connMCD)
 
 	user := viper.Get("POSTGRES_USER")
 	password := viper.Get("POSTGRES_PASSWORD")
@@ -83,7 +87,7 @@ func main() {
 		panic("Ping failed!")
 	}
 
-	c := server.NewCommitExplorer(log, db, bp, cc, gpc, rmHost, stor)
+	c := server.NewCommitExplorer(log, db, bp, cc, gpc, mcd, rmHost, stor)
 
 	// register the currency server
 	protos.RegisterCommitExplorerServer(gs, c)

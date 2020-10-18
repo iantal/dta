@@ -10,6 +10,7 @@ import (
 	"github.com/iantal/dta/internal/service"
 	protos "github.com/iantal/dta/protos/dta"
 	gpprotos "github.com/iantal/dta/protos/gradle-parser"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
 	"github.com/jinzhu/gorm"
 )
 
@@ -19,10 +20,10 @@ type CommitExplorer struct {
 }
 
 // NewCommitExplorer creates a new Analyzer
-func NewCommitExplorer(l hclog.Logger, db *gorm.DB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *CommitExplorer {
+func NewCommitExplorer(l hclog.Logger, db *gorm.DB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, mcdClient mcdprotos.DownloaderClient, rmHost string, store files.Storage) *CommitExplorer {
 	projectDB := repository.NewProjectDB(l, db)
 	libraryDB := repository.NewLibraryDB(l, db)
-	return &CommitExplorer{l, service.NewExplorer(l, projectDB, libraryDB, basePath, btdClient, gradleClient, rmHost, store)}
+	return &CommitExplorer{l, service.NewExplorer(l, projectDB, libraryDB, basePath, btdClient, gradleClient, mcdClient, rmHost, store)}
 }
 
 // ExploreCommit performs the analysis for a specific commitId and projectId

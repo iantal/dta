@@ -12,6 +12,7 @@ import (
 	"github.com/iantal/dta/internal/files"
 	"github.com/iantal/dta/internal/repository"
 	gpprotos "github.com/iantal/dta/protos/gradle-parser"
+	mcdprotos "github.com/iantal/mcd/protos/mcd"
 )
 
 // Explorer is a service that handles the analysis flows
@@ -22,13 +23,14 @@ type Explorer struct {
 	basePath     string
 	btdClient    btdprotos.UsedBuildToolsClient
 	gradleClient gpprotos.GradleParseServiceClient
+	mcdClient    mcdprotos.DownloaderClient
 	rmHost       string
 	store        files.Storage
 }
 
 // NewExplorer creates an Explorer
-func NewExplorer(l hclog.Logger, db *repository.ProjectDB, ldb *repository.LibraryDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, rmHost string, store files.Storage) *Explorer {
-	return &Explorer{l, db, ldb, basePath, btdClient, gradleClient, rmHost, store}
+func NewExplorer(l hclog.Logger, db *repository.ProjectDB, ldb *repository.LibraryDB, basePath string, btdClient btdprotos.UsedBuildToolsClient, gradleClient gpprotos.GradleParseServiceClient, mcdClient mcdprotos.DownloaderClient, rmHost string, store files.Storage) *Explorer {
+	return &Explorer{l, db, ldb, basePath, btdClient, gradleClient, mcdClient, rmHost, store}
 }
 
 // Explore performs the analysis steps for a given commit of a project
@@ -38,7 +40,8 @@ func (e *Explorer) Explore(projectID, commit string) error {
 	var project *domain.Project
 	project = e.db.GetProjectByIDAndCommit(projectID, commit)
 	if project != nil && project.Status == domain.DependencyTreeSuccess.String() {
-		// send request to gradle parser
+		// send libraries for pID and commit to mcd for further analysis
+		e.sendMCDRequest(project)
 		return nil
 	}
 
