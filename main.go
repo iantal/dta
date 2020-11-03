@@ -30,6 +30,7 @@ func gRPCConnection(host string) *grpc.ClientConn {
 		grpc.WithTimeout(60*time.Second),
 	)
 	if err != nil {
+		fmt.Printf("Error connecting to %s", host)
 		panic(err)
 	}
 	return conn
