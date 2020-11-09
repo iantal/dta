@@ -7,6 +7,7 @@ import (
 
 	btdprotos "github.com/iantal/btd/protos/btd"
 	"github.com/iantal/dta/internal/domain"
+	"github.com/sirupsen/logrus"
 )
 
 func (e *Explorer) detectBuildTools(destPath string, project *domain.Project) {
@@ -21,7 +22,11 @@ func (e *Explorer) detectBuildTools(destPath string, project *domain.Project) {
 
 	resp, err := e.btdClient.GetBuildTools(context.Background(), r)
 	if err != nil {
-		e.log.Error("Could not get build tool for", "projectID", projectID, "commit", commit)
+		e.log.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"commit":    commit,
+			"error":     err,
+		}).Error("Could not get build tool", "projectID")
 		e.db.UpdateProject(project, domain.BuildToolFailure)
 		return
 	}
@@ -46,7 +51,11 @@ func (e *Explorer) handleGradle(destPath, commit string, project *domain.Project
 	projects, err := gw.Projects()
 	if err != nil {
 		e.db.UpdateProject(project, domain.DependencyTreeFailure)
-		e.log.Error("Error generating gradle dependency tree")
+		e.log.WithFields(logrus.Fields{
+			"projectID": project.ProjectID,
+			"commit":    commit,
+			"error":     err,
+		}).Error("Error generating gradle dependency tree")
 		return
 	}
 
@@ -54,11 +63,16 @@ func (e *Explorer) handleGradle(destPath, commit string, project *domain.Project
 
 	if len(projects) == 1 {
 		e.db.UpdateProjectName(project, projects[0])
-		tree := gw.Dependencies(projects[0], false)
+		tree := gw.Dependencies(project, projects[0], false)
 		results, err := e.parseGradle(tree)
 		if err != nil {
 			e.db.UpdateProject(project, domain.DependencyTreeFailure)
-			e.log.Error("Could not generate dependency tree for " + projects[0])
+			e.log.WithFields(logrus.Fields{
+				"projectID": project.ProjectID,
+				"name":      projects[0],
+				"commit":    commit,
+				"error":     err,
+			}).Error("Could not generate dependency tree")
 			return
 		}
 		for _, proj := range results {
@@ -70,11 +84,16 @@ func (e *Explorer) handleGradle(destPath, commit string, project *domain.Project
 		for _, p := range projects {
 			subproject := domain.NewProject(project.ProjectID, project.CommitHash, p, project.Status, project.BuildTool, project.Data)
 			e.db.AddProject(subproject)
-			tree := gw.Dependencies(p, true)
+			tree := gw.Dependencies(project, p, true)
 			results, err := e.parseGradle(tree)
 			if err != nil {
 				e.db.UpdateProject(subproject, domain.DependencyTreeFailure)
-				e.log.Error("Could not generate dependency tree for " + p)
+				e.log.WithFields(logrus.Fields{
+					"projectID": project.ProjectID,
+					"name":      p,
+					"commit":    commit,
+					"error":     err,
+				}).Error("Could not generate dependency tree")
 				return
 			}
 			for _, proj := range results {

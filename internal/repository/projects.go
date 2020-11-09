@@ -2,19 +2,20 @@ package repository
 
 import (
 	"github.com/google/uuid"
-	"github.com/hashicorp/go-hclog"
 	"github.com/iantal/dta/internal/domain"
+	"github.com/iantal/dta/internal/utils"
 	"github.com/jinzhu/gorm"
+	"github.com/sirupsen/logrus"
 )
 
 // ProjectDB defines the CRUD operations for storing projects in the db
 type ProjectDB struct {
-	log hclog.Logger
+	log *utils.StandardLogger
 	db  *gorm.DB
 }
 
 // NewProjectDB returns a ProjectDB object for handling CRUD operations
-func NewProjectDB(log hclog.Logger, db *gorm.DB) *ProjectDB {
+func NewProjectDB(log *utils.StandardLogger, db *gorm.DB) *ProjectDB {
 	db.AutoMigrate(&domain.Project{})
 	return &ProjectDB{
 		log: log,
@@ -28,7 +29,7 @@ func (p *ProjectDB) AddProject(project *domain.Project) {
 	return
 }
 
-// UpdateProject updates the analysis status of the project 
+// UpdateProject updates the analysis status of the project
 func (p *ProjectDB) UpdateProject(project *domain.Project, status domain.Status) {
 	p.db.Model(&project).Update("status", status.String())
 }
@@ -55,7 +56,9 @@ func (p *ProjectDB) GetProjectByID(id string) *domain.Project {
 	project := &domain.Project{}
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		p.log.Error("Project with projectId {} was not found")
+		p.log.WithFields(logrus.Fields{
+			"projectID": id,
+		}).Error("Project was not found")
 		return nil
 	}
 	p.db.Find(&project, "project_id = ?", uid)
@@ -67,7 +70,10 @@ func (p *ProjectDB) GetProjectByIDAndCommit(id, commit string) *domain.Project {
 	project := &domain.Project{}
 	uid, err := uuid.Parse(id)
 	if err != nil {
-		p.log.Error("Project with projectId {} was not found")
+		p.log.WithFields(logrus.Fields{
+			"projectID": id,
+			"commit": commit,
+		}).Error("Project was not found")
 		return nil
 	}
 	p.db.Where("project_id = ? AND commit_hash = ?", uid, commit).Find(&project)

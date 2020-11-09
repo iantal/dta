@@ -14,7 +14,7 @@ func (e *Explorer) parseGradle(data string) ([]*gpprotos.Project, error) {
 
 	resp, err := e.gradleClient.Parse(context.Background(), r)
 	if err != nil {
-		e.log.Info("Error gradle parser", "error", err)
+		e.log.WithField("error", err).Info("Error gradle parser", "error", err)
 		return nil, err
 	}
 

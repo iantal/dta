@@ -5,6 +5,8 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+
+	"github.com/sirupsen/logrus"
 )
 
 func (e *Explorer) downloadRepository(projectID, commit string) error {
@@ -25,17 +27,21 @@ func (e *Explorer) downloadRepository(projectID, commit string) error {
 	return nil
 }
 
-func (e *Explorer) save(projectID, commit string, r io.ReadCloser) error {
-	e.log.Info("Save project - storage", "projectID", projectID)
+func (e *Explorer) save(projectID, commit string, r io.ReadCloser) {
+	e.log.WithFields(logrus.Fields{
+		"projectID": projectID,
+		"commit":    commit,
+	}).Info("Save project to storage")
 
 	bp := commit + ".bundle"
 	fp := filepath.Join(projectID, "bundle", bp)
 	err := e.store.Save(fp, r)
 
 	if err != nil {
-		e.log.Error("Unable to save file", "error", err)
-		return fmt.Errorf("Unable to save file %s", err)
+		e.log.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"commit":    commit,
+			"error":     err,
+		}).Error("Unable to save file")
 	}
-
-	return nil
 }

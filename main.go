@@ -6,10 +6,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/hashicorp/go-hclog"
 	btdprotos "github.com/iantal/btd/protos/btd"
 	"github.com/iantal/dta/internal/files"
 	"github.com/iantal/dta/internal/server"
+	"github.com/iantal/dta/internal/utils"
 	protos "github.com/iantal/dta/protos/dta"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres" // postgres
@@ -21,7 +21,7 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func gRPCConnection(host string) *grpc.ClientConn {
+func gRPCConnection(log *utils.StandardLogger, host string) *grpc.ClientConn {
 	conn, err := grpc.Dial(
 		host,
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
@@ -30,15 +30,15 @@ func gRPCConnection(host string) *grpc.ClientConn {
 		grpc.WithTimeout(60*time.Second),
 	)
 	if err != nil {
-		fmt.Printf("Error connecting to %s", host)
-		panic(err)
+		log.WithField("host", host).Error("GRPC connection failed")
+		os.Exit(1)
 	}
 	return conn
 }
 
 func main() {
 	viper.AutomaticEnv()
-	log := hclog.Default()
+	log := utils.NewLogger()
 
 	// create a new gRPC server, use WithInsecure to allow http connections
 	gs := grpc.NewServer()
@@ -51,22 +51,22 @@ func main() {
 
 	stor, err := files.NewLocal(bp, 1024*1000*1000*5)
 	if err != nil {
-		log.Error("Unable to create storage", "error", err)
+		log.WithField("error", err).Error("Unable to create storage")
 		os.Exit(1)
 	}
 
 	// setup GRPC for BTD
-	connBTD := gRPCConnection(btdHost)
+	connBTD := gRPCConnection(log, btdHost)
 	defer connBTD.Close()
 	cc := btdprotos.NewUsedBuildToolsClient(connBTD)
 
 	// setup GRPC for GRADLE-PARSER
-	connGP := gRPCConnection(gradleParserHost)
+	connGP := gRPCConnection(log, gradleParserHost)
 	defer connGP.Close()
 	gpc := gpprotos.NewGradleParseServiceClient(connGP)
 
 	// setup GRPC for MCD
-	connMCD := gRPCConnection(mcdHost)
+	connMCD := gRPCConnection(log, mcdHost)
 	defer connMCD.Close()
 	mcd := mcdprotos.NewDownloaderClient(connMCD)
 
@@ -80,12 +80,14 @@ func main() {
 	db, err := gorm.Open("postgres", connection)
 	defer db.Close()
 	if err != nil {
-		panic("Failed to connect to database!")
+		log.WithField("error", err).Error("Failed to connect to database")
+		os.Exit(1)
 	}
 
 	err = db.DB().Ping()
 	if err != nil {
-		panic("Ping failed!")
+		log.WithField("error", err).Error("Failed to ping the database")
+		os.Exit(1)
 	}
 
 	c := server.NewCommitExplorer(log, db, bp, cc, gpc, mcd, rmHost, stor)
@@ -100,11 +102,11 @@ func main() {
 	// create a TCP socket for inbound server connections
 	l, err := net.Listen("tcp", fmt.Sprintf(":%d", 8006))
 	if err != nil {
-		log.Error("Unable to create listener", "error", err)
+		log.WithField("error", err).Error("Unable to create listener")
 		os.Exit(1)
 	}
 
-	log.Info("Starting server", "bind_address", l.Addr().String())
+	log.Info("Starting server bind_address ", l.Addr().String())
 	// listen for requests
 	gs.Serve(l)
 }

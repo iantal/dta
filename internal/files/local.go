@@ -1,12 +1,10 @@
 package files
 
 import (
-	"fmt"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
 
 	"golang.org/x/xerrors"
 )
@@ -101,23 +99,11 @@ func (l *Local) Unbundle(src, dest string) error {
 
 	os.Chdir(dest)
 
-	fmt.Println(dest)
-	fmt.Println(src)
-
 	cmd := exec.Command("git", "clone", src)
-	var waitStatus syscall.WaitStatus
 	if err := cmd.Run(); err != nil {
-		if err != nil {
-			os.Stderr.WriteString(fmt.Sprintf("Error: %s\n", err.Error()))
-		}
-		if exitError, ok := err.(*exec.ExitError); ok {
-			waitStatus = exitError.Sys().(syscall.WaitStatus)
-			fmt.Printf("Output: %s\n", []byte(fmt.Sprintf("%d", waitStatus.ExitStatus())))
-		}
-		return err
+		return xerrors.Errorf("Unable to unbundle repository: %w", err)
 	}
 
-	waitStatus = cmd.ProcessState.Sys().(syscall.WaitStatus)
 	os.Chdir("-")
 	return nil
 }
