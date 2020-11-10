@@ -1,0 +1,19 @@
+name: Docker Publish
+
+on:
+  release:
+    type: [published]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: mr-smithers-excellent/docker-build-push@v4
+      name: Build & push Docker image
+      with:
+        image: micky0000/seclens
+        registry: docker.io
+        dockerfile: docker/Dockerfile
+        username: ${{ secrets.DOCKER_USER }}
+        password: ${{ secrets.DOCKER_PASS }}
