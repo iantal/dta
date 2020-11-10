@@ -9,8 +9,8 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/google/uuid v1.1.2
 	github.com/hashicorp/go-hclog v0.14.1
-	github.com/iantal/btd v0.0.0-20201017191254-5500becf5085
-	github.com/iantal/mcd v0.0.0-20201017112648-04c7f7603e7f
+	github.com/iantal/btd v1.0.0-btd
+	github.com/iantal/mcd v1.0.0-mcd
 	github.com/jinzhu/gorm v1.9.16
 	github.com/magiconair/properties v1.8.4 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
