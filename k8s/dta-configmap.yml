@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: dta-config
+  labels:
+    app: dta
+data:
+  postgres_user: postgres
+  postgres_port: "5432"
+  postgres_db: dta_db
+  postgres_host: pgdb-postgresql

@@ -43,7 +43,7 @@ func main() {
 	// create a new gRPC server, use WithInsecure to allow http connections
 	gs := grpc.NewServer()
 
-	bp := fmt.Sprintf("%v", viper.Get("BASE_PATH"))
+	bp := "/opt/data"
 	rmHost := fmt.Sprintf("%v", viper.Get("RM_HOST"))
 	btdHost := fmt.Sprintf("%v", viper.Get("BTD_HOST"))
 	gradleParserHost := fmt.Sprintf("%v", viper.Get("GP_HOST"))

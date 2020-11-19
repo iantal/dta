@@ -1,0 +1,67 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dta-deployment
+  labels:
+    app: dta
+spec:
+  selector:
+    matchLabels:
+      app: dta
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dta
+    spec:
+      imagePullSecrets: 
+        - name: dockerregistrykey
+      containers:
+        - name: dta
+          image: micky0000/seclens:v1.0.5-dta
+          imagePullPolicy: "Always"
+          ports:
+            - containerPort: 8006
+          env:
+            - name: RM_HOST
+              value: "rm-service:8005"
+            
+            - name: BTD_HOST
+              value: "btd-service:8004"
+            
+            - name: GP_HOST
+              value: "gp-service:4001"
+            
+            - name: MCD_HOST
+              value: "gp-service:8007"
+
+            - name: POSTGRES_USER
+              valueFrom:
+                configMapKeyRef:
+                  name: dta-config
+                  key: postgres_user
+
+            - name: POSTGRES_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: dta-config
+                  key: postgres_host
+
+            - name: POSTGRES_PORT
+              valueFrom:
+                configMapKeyRef:
+                  name: dta-config
+                  key: postgres_port
+
+            - name: POSTGRES_DB
+              valueFrom:
+                configMapKeyRef:
+                  name: dta-config
+                  key: postgres_db
+
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: pgdb-postgresql
+                  key: postgresql-password
+
