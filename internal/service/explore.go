@@ -67,8 +67,8 @@ func (e *Explorer) Explore(projectID, commit string) {
 
 	e.db.AddProject(project)
 	bp := commit + ".bundle"
-	srcPath := e.store.FullPath(filepath.Join(projectID, "bundle", bp))
-	destPath := e.store.FullPath(filepath.Join(projectID, "unbundle"))
+	srcPath := e.store.FullPath(filepath.Join(projectID, commit, "bundle", bp))
+	destPath := e.store.FullPath(filepath.Join(projectID, commit, "unbundle"))
 
 	if _, err := os.Stat(destPath); os.IsNotExist(err) {
 		err := e.store.Unbundle(srcPath, destPath)

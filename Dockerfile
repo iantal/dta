@@ -30,7 +30,7 @@ RUN mkdir -p /opt/data
 
 COPY --from=builder /dist .
 
-RUN apk update && apk add wget && apk add bash && apk add zip && apk add git && apk add openjdk8-jre && apk add curl
+RUN apk update && apk add wget && apk add bash && apk add zip && apk add --no-cache git && apk add openjdk8-jre && apk add curl
 
 EXPOSE 8006
 

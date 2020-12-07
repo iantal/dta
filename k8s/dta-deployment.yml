@@ -33,7 +33,7 @@ spec:
               value: "gp-service:4001"
             
             - name: MCD_HOST
-              value: "gp-service:8007"
+              value: "mcd-service:8007"
 
             - name: POSTGRES_USER
               valueFrom:

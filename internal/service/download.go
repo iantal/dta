@@ -34,7 +34,7 @@ func (e *Explorer) save(projectID, commit string, r io.ReadCloser) {
 	}).Info("Save project to storage")
 
 	bp := commit + ".bundle"
-	fp := filepath.Join(projectID, "bundle", bp)
+	fp := filepath.Join(projectID, commit, "bundle", bp)
 	err := e.store.Save(fp, r)
 
 	if err != nil {
