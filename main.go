@@ -27,7 +27,7 @@ func gRPCConnection(log *utils.StandardLogger, host string) *grpc.ClientConn {
 		grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(1024*1000*3000)),
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
-		grpc.WithTimeout(60*time.Second),
+		grpc.WithTimeout(600*time.Second),
 	)
 	if err != nil {
 		log.WithField("host", host).Error("GRPC connection failed")

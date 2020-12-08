@@ -74,6 +74,8 @@ func (e *Explorer) Explore(projectID, commit string) {
 		err := e.store.Unbundle(srcPath, destPath)
 		if err != nil {
 			e.log.WithFields(logrus.Fields{
+				"src":       srcPath,
+				"dest":      destPath,
 				"projectID": projectID,
 				"commit":    commit,
 				"error":     err,

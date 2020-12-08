@@ -98,12 +98,13 @@ func (l *Local) Unbundle(src, dest string) error {
 	}
 
 	os.Chdir(dest)
+	
 
 	cmd := exec.Command("git", "clone", src)
 	if err := cmd.Run(); err != nil {
 		return xerrors.Errorf("Unable to unbundle repository: %w", err)
 	}
-
+	cmd.ProcessState.Sys()
 	os.Chdir("-")
 	return nil
 }
