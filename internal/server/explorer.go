@@ -34,7 +34,9 @@ func (c *CommitExplorer) ExploreCommit(ctx context.Context, rr *protos.ExploreCo
 		"commit":    rr.CommitHash,
 	}).Info("Handle request for ExploreCommit")
 
-	c.explorer.Explore(rr.GetProjectID(), rr.GetCommitHash())
+	go func() {
+		c.explorer.Explore(rr.GetProjectID(), rr.GetCommitHash())
+	}()
 
 	return &protos.ExploreCommitResponse{}, nil
 }
