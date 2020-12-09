@@ -35,22 +35,11 @@ func NewExplorer(l *utils.StandardLogger, db *repository.ProjectDB, ldb *reposit
 
 // Explore performs the analysis steps for a given commit of a project
 func (e *Explorer) Explore(projectID, commit string) {
-	projectPath := filepath.Join(e.store.FullPath(projectID), "bundle")
+	e.skipIfAlreadyAnalyzed(projectID, commit)
 
-	var project *domain.Project
-	project = e.db.GetProjectByIDAndCommit(projectID, commit)
-	if project != nil && project.Status == domain.DependencyTreeSuccess.String() {
-		// send libraries for pID and commit to mcd for further analysis
-		e.log.WithFields(logrus.Fields{
-			"projectID": projectID,
-			"commit":    commit,
-		}).Info("Already anayzed. Sending data to mcd")
-		e.sendMCDRequest(project)
-		return
-	}
+	project := domain.NewProject(uuid.MustParse(projectID), commit, "root", domain.DownloadSuccess.String(), "", "")
 
-	project = domain.NewProject(uuid.MustParse(projectID), commit, "root", domain.DownloadSuccess.String(), "", "")
-
+	projectPath := filepath.Join(e.store.FullPath(projectID), commit, "bundle")
 	if _, err := os.Stat(projectPath); os.IsNotExist(err) {
 		err := e.downloadRepository(projectID, commit)
 		if err != nil {
@@ -64,8 +53,8 @@ func (e *Explorer) Explore(projectID, commit string) {
 			return
 		}
 	}
-
 	e.db.AddProject(project)
+
 	bp := commit + ".bundle"
 	srcPath := e.store.FullPath(filepath.Join(projectID, commit, "bundle", bp))
 	destPath := e.store.FullPath(filepath.Join(projectID, commit, "unbundle"))
@@ -87,4 +76,15 @@ func (e *Explorer) Explore(projectID, commit string) {
 	e.db.UpdateProject(project, domain.UnbundleSuccess)
 
 	go e.detectBuildTools(destPath, project)
+}
+
+func (e *Explorer) skipIfAlreadyAnalyzed(projectID, commit string) {
+	project := e.db.GetProjectByIDAndCommit(projectID, commit)
+	if project != nil && project.Status == domain.DependencyTreeSuccess.String() {
+		e.log.WithFields(logrus.Fields{
+			"projectID": projectID,
+			"commit":    commit,
+		}).Info("Already anayzed. Sending data to mcd")
+		e.sendMCDRequest(project)
+	}
 }
