@@ -18,7 +18,7 @@ spec:
         - name: dockerregistrykey
       containers:
         - name: dta
-          image: micky0000/seclens:v1.0.8-dta
+          image: {{ .Values.registry }}:{{ .Values.tag }}
           imagePullPolicy: "Always"
           ports:
             - containerPort: 8006
