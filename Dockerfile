@@ -7,9 +7,9 @@ ENV GO111MODULE="" \
 WORKDIR /build
 COPY . .
 RUN apk add git
-ARG GITHUB_TOKEN
-RUN echo ${GITHUB_TOKEN}
-RUN git config --global url."https://golang:${GITHUB_TOKEN}@github.com".insteadOf "https://github.com"
+ARG GT
+RUN echo ${GT}
+RUN git config --global url."https://golang:${GT}@github.com".insteadOf "https://github.com"
 RUN go build -o main .
 WORKDIR /dist
 RUN cp /build/main .
